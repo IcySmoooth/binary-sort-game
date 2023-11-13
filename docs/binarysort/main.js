@@ -34,6 +34,24 @@ lllll
 lllll
  lll
   l
+`,`
+llll
+ l
+ l
+  l
+  l
+   l
+`,`
+llll
+  l
+  l
+ l
+ l
+l
+`,`
+ ll
+l  l
+ ll
 `
 ];
 
@@ -74,6 +92,20 @@ let bitContainerArray;
 * @type { BitContainer }
 */
 let grabBitContainer;
+
+// NOT gate class. Inverts the value of the bit grabber upon collision with it
+/**
+*@typedef {{
+*	 activated: Boolean
+*  used: Boolean
+*  pos: Vector
+* }} NotGate
+*/
+
+/**
+* @type { NotGate [] }
+*/
+let notGateArray;
 
 // Timer class. Manages timer based events. Time is measured in frames.
 /**
@@ -167,7 +199,7 @@ function update() {
       expectedValue: false,
       givenValue: false,
       pos: vec(grabBitStartPosition.x, grabBitStartPosition.y)
-    }
+    };
 
     bitPositionArray = [
       vec(2, 75),
@@ -178,6 +210,8 @@ function update() {
       vec(122, 75)
     ];
 
+    notGateArray = [];
+
     health = {
       maxHealth: 3,
       currentHealth: 3,
@@ -187,13 +221,13 @@ function update() {
           end();
         }
       }
-    }
+    };
 
     healthIconPositions = [
       vec(29, 93),
       vec(49, 93),
       vec(69, 93)
-    ]
+    ];
 
     timer = {
 			timeLimit: 0,
@@ -235,11 +269,8 @@ function update() {
         removeFirstBit();
         pushNewBit(bitPositionArray[5], false);
         for (let i = 0; i < bitContainerArray.length; i++) {
-          /**
-          * @type { BitContainer }
-          */
-          let bit = bitContainerArray[i];
-          bit.pos = vec(bitPositionArray[i].x, bitPositionArray[i].y);
+          bitContainerArray[i].pos = vec(bitPositionArray[i].x, bitPositionArray[i].y);
+          notGateArray[i].pos = vec(bitPositionArray[i].x, bitPositionArray[i].y-20);
         }
       },
       grabBitAscendEnter: function () {
@@ -275,7 +306,7 @@ function update() {
 
     initializeBitArray();
     setTimer(60);
-    //console.log(bitContainerArray);
+    console.log(notGateArray);
   }
 
   // If a timer is active, increment it until it reaches its limit
@@ -302,6 +333,7 @@ function update() {
   drawPlayerBit();
   drawBitArray();
   drawHeartIcons();
+  drawNotGates();
 
   if (fsm.currentState == states.GRAB_BIT_ASCEND || fsm.currentState == states.GRAB_BIT_DESCEND) {
     drawGrabContainer();
@@ -312,11 +344,8 @@ function update() {
 function moveBitArrayUpdate() {
   // Update the positions of all containers in the array
   for (let i = 0; i < bitContainerArray.length; i++) {
-    /**
-    * @type { BitContainer }
-    */
-    let bit = bitContainerArray[i];
-    bit.pos.x -= 0.5;
+    bitContainerArray[i].pos.x -= 0.5;
+    notGateArray[i].pos.x -= 0.5;
   }
 
   // Check if middle container is in the correct spot
@@ -373,10 +402,30 @@ function pushNewBit(newPos, blank) {
     pos: vec(newPos.x, newPos.y)
   };
   bitContainerArray.push(newBit);
+
+  // Also spawn in a new not gate if luck is on your side
+  /**
+  * @type { NotGate }
+  */
+  let newNotGate = {
+    activated: getNotGateChance(),
+    used: false,
+    pos: vec(newPos.x, newPos.y-20)
+  };
+  notGateArray.push(newNotGate);
 }
 
 function removeFirstBit() {
   bitContainerArray.shift();
+  notGateArray.shift();
+}
+
+/**
+ * @returns {Boolean}
+ */
+// Returns true or false if the bit should also spawn a not gate
+function getNotGateChance() {
+  return Math.random() < 0.5;
 }
 
 function drawPlayerBit() {
@@ -442,10 +491,36 @@ function drawGrabContainer() {
   if (grabBitContainer.activated) {
     color("black");
 
+    /**
+    * @type { Boolean }
+    */
+    let notGateCollided = false;
+
     if (grabBitContainer.givenValue) {
-      char("b", grabBitContainer.pos, { scale: vec(2, 2) });
+      notGateCollided = char("b", grabBitContainer.pos, { scale: vec(2, 2) }).isColliding.char.g;
+      // Invert the bit in the bit grabber only if collision was found and if the not gate wasn't used
+      if (notGateCollided && !notGateArray[2].used) {
+        notGateArray[2].used = true;
+        grabBitContainer.givenValue = !grabBitContainer.givenValue;
+      }
     } else {
-      char("a", grabBitContainer.pos, { scale: vec(2, 2) });
+      notGateCollided = char("a", grabBitContainer.pos, { scale: vec(2, 2) }).isColliding.char.g;
+      // Invert the bit in the bit grabber only if collision was found and if the not gate wasn't used
+      if (notGateCollided && !notGateArray[2].used) {
+        notGateArray[2].used = true;
+        grabBitContainer.givenValue = !grabBitContainer.givenValue;
+      }
+    }
+  }
+}
+
+function drawNotGates() {
+  color("black");
+  for (let i = 0; i < notGateArray.length; i++) {
+    if (notGateArray[i].activated) {
+      char("e", notGateArray[i].pos.x-2, notGateArray[i].pos.y, { scale: vec(1, 1) });
+      char("f", notGateArray[i].pos.x+2, notGateArray[i].pos.y, { scale: vec(1, 1) });
+      char("g", notGateArray[i].pos.x, notGateArray[i].pos.y+3, { scale: vec(1, 1) });
     }
   }
 }
