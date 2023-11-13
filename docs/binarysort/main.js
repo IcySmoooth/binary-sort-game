@@ -132,7 +132,7 @@ function update() {
     bitContainerArray = [];
 
     grabBitContainer = {
-      activated: true,
+      activated: false,
       blank: true,
       expectedValue: false,
       givenValue: false,
@@ -197,9 +197,13 @@ function update() {
       },
       grabBitAscendEnter: function () {
         setTimer(60);
-        console.log("entering");
+        grabBitContainer.activated = false;
+        grabBitContainer.pos = vec(grabBitStartPosition.x, grabBitStartPosition.y)
       },
       grabBitAscendExit: function () {
+        grabBitContainer.pos = vec(grabBitEndPosition.x, grabBitEndPosition.y)
+        grabBitContainer.activated = true;
+        grabBitContainer.givenValue = playerBit.activated;
       },
       grabBitDescendEnter: function () {
       },
@@ -209,7 +213,7 @@ function update() {
 
     initializeBitArray();
     setTimer(60);
-    console.log(bitContainerArray);
+    //console.log(bitContainerArray);
   }
 
   // If a timer is active, increment it until it reaches its limit
@@ -235,6 +239,10 @@ function update() {
 
   drawPlayerBit();
   drawBitArray();
+
+  if (fsm.currentState == states.GRAB_BIT_ASCEND || fsm.currentState == states.GRAB_BIT_DESCEND) {
+    drawGrabContainer();
+  }
 }
 
 function moveBitArrayUpdate() {
@@ -254,11 +262,15 @@ function moveBitArrayUpdate() {
 }
 
 function grabBitAscendUpdate() {
-  
+  grabBitContainer.pos.y -= 0.5;
+
+  if (grabBitContainer.pos.y <= grabBitEndPosition.y) {
+    fsm.changeState(states.GRAB_BIT_DESCEND);
+  }
 }
 
 function grabBitDescendUpdate() {
-  
+  console.log("running");
 }
 
 function initializeBitArray() {
@@ -327,7 +339,7 @@ function drawBitArray() {
     // Display the number inside the bit container it the container is not blank
     if (!bit.blank){
       if (!bit.activated) {
-        color("light_black")
+        color("light_black");
       }
 
       if (bit.expectedValue) {
@@ -339,9 +351,28 @@ function drawBitArray() {
   }
 }
 
+function drawGrabContainer() {
+  color("black");
+
+  // Display the grab bit container
+  char("c", grabBitContainer.pos, { scale: vec(4, 4) });
+
+  // Display the number inside the grab bit container if it grabbed the player's number value
+  if (grabBitContainer.activated) {
+    color("black");
+
+    if (grabBitContainer.expectedValue) {
+      char("b", grabBitContainer.pos, { scale: vec(2, 2) });
+    } else {
+      char("a", grabBitContainer.pos, { scale: vec(2, 2) });
+    }
+  }
+}
+
 /**
  * @param {Number} timeLimit
  */
 function setTimer(timeLimit) {
+  timer.elapsedTime = 0;
   timer.timeLimit = timeLimit
 }
