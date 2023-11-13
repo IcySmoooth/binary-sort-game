@@ -1,6 +1,9 @@
 title = "Binary Sort";
 
 description = `
+    Tip:
+Sort the bits.
+Beware the NOT.
 `;
 
 characters = [
@@ -28,7 +31,9 @@ llllll
 `
   ];
 
-options = {};
+options = {
+  seed: 1
+};
 
 // Player Bit class. Stores whether or not the input is currently active or not
 /**
@@ -207,7 +212,22 @@ function update() {
       },
       grabBitDescendEnter: function () {
       },
+
       grabBitDescendExit: function () {
+        /**
+        * @type { BitContainer }
+        */
+        let bitContainer = bitContainerArray[2]
+        bitContainer.activated = true;
+        bitContainer.givenValue = grabBitContainer.givenValue;
+
+        if (bitContainer.expectedValue == bitContainer.givenValue) {
+          addScore(100);
+        } else {
+          loseHealth();
+        }
+
+        setTimer(60);
       }
 		};
 
@@ -270,7 +290,11 @@ function grabBitAscendUpdate() {
 }
 
 function grabBitDescendUpdate() {
-  console.log("running");
+  grabBitContainer.pos.y += 0.5;
+
+  if (grabBitContainer.pos.y >= grabBitStartPosition.y) {
+    fsm.changeState(states.MOVE_BIT_ARRAY);
+  }
 }
 
 function initializeBitArray() {
@@ -338,14 +362,27 @@ function drawBitArray() {
 
     // Display the number inside the bit container it the container is not blank
     if (!bit.blank){
+      // Display the number in the bit container as light grey if it has not been activated
       if (!bit.activated) {
         color("light_black");
-      }
 
-      if (bit.expectedValue) {
-        char("b", bit.pos, { scale: vec(2, 2) });
-      } else {
-        char("a", bit.pos, { scale: vec(2, 2) });
+        if (bit.expectedValue) {
+          char("b", bit.pos, { scale: vec(2, 2) });
+        } else {
+          char("a", bit.pos, { scale: vec(2, 2) });
+        }
+      } 
+      // Display the number in the bit container as black or red if it has successfully been activated
+      else {
+        if (bit.expectedValue != bit.givenValue) {
+        color("light_red");
+        }
+
+        if (bit.givenValue) {
+          char("b", bit.pos, { scale: vec(2, 2) });
+        } else {
+          char("a", bit.pos, { scale: vec(2, 2) });
+        }
       }
     }
   }
@@ -361,12 +398,17 @@ function drawGrabContainer() {
   if (grabBitContainer.activated) {
     color("black");
 
-    if (grabBitContainer.expectedValue) {
+    if (grabBitContainer.givenValue) {
       char("b", grabBitContainer.pos, { scale: vec(2, 2) });
     } else {
       char("a", grabBitContainer.pos, { scale: vec(2, 2) });
     }
   }
+}
+
+function loseHealth() {
+  //play("hit");
+  end();
 }
 
 /**
