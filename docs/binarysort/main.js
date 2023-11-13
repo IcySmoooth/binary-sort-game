@@ -28,11 +28,17 @@ l    l
 l    l
 l    l
 llllll
+`,`
+ l l
+lllll
+lllll
+ lll
+  l
 `
-  ];
+];
 
 options = {
-  seed: 1
+  seed: 19
 };
 
 // Player Bit class. Stores whether or not the input is currently active or not
@@ -72,15 +78,34 @@ let grabBitContainer;
 // Timer class. Manages timer based events. Time is measured in frames.
 /**
 *@typedef {{
-  *	 timeLimit: Number
-  *  elapsedTime: Number
-  * }} Timer
-  */
+*	 timeLimit: Number
+*  elapsedTime: Number
+* }} Timer
+*/
   
-  /**
-  * @type { Timer }
-  */
-  let timer;
+/**
+* @type { Timer }
+*/
+let timer;
+
+// Health class. Tracks player health.
+/**
+*@typedef {{
+*	 maxHealth: Number
+*  currentHealth: Number
+*  loseHealth: (healthLost: number) => void
+* }} Health
+*/
+    
+/**
+* @type { Health }
+*/
+let health;
+
+/**
+* @type { Vector [] }
+*/
+let healthIconPositions
 
 // Implementing a finite state machine to handle game state logic
 /**
@@ -153,6 +178,23 @@ function update() {
       vec(122, 75)
     ];
 
+    health = {
+      maxHealth: 3,
+      currentHealth: 3,
+      loseHealth: function (healthLost) {
+        this.currentHealth -= healthLost;
+        if (this.currentHealth <= 0) {
+          end();
+        }
+      }
+    }
+
+    healthIconPositions = [
+      vec(29, 93),
+      vec(49, 93),
+      vec(69, 93)
+    ]
+
     timer = {
 			timeLimit: 0,
       elapsedTime: 0
@@ -224,7 +266,7 @@ function update() {
         if (bitContainer.expectedValue == bitContainer.givenValue) {
           addScore(100);
         } else {
-          loseHealth();
+          health.loseHealth(1);
         }
 
         setTimer(60);
@@ -259,11 +301,13 @@ function update() {
 
   drawPlayerBit();
   drawBitArray();
+  drawHeartIcons();
 
   if (fsm.currentState == states.GRAB_BIT_ASCEND || fsm.currentState == states.GRAB_BIT_DESCEND) {
     drawGrabContainer();
   }
 }
+
 
 function moveBitArrayUpdate() {
   // Update the positions of all containers in the array
@@ -406,9 +450,14 @@ function drawGrabContainer() {
   }
 }
 
-function loseHealth() {
-  //play("hit");
-  end();
+function drawHeartIcons() {
+  color("black");
+  for (let i = 0; i < healthIconPositions.length; i++) {
+    if (i+1 > health.currentHealth) {
+      color("light_black");
+    }
+    char("d", healthIconPositions[i], { scale: vec(2, 2) });
+  }
 }
 
 /**
