@@ -114,7 +114,7 @@ let notGateArray;
 *  elapsedTime: Number
 * }} Timer
 */
-  
+
 /**
 * @type { Timer }
 */
@@ -128,7 +128,7 @@ let timer;
 *  loseHealth: (healthLost: number) => void
 * }} Health
 */
-    
+
 /**
 * @type { Health }
 */
@@ -182,6 +182,29 @@ let grabBitStartPosition = vec(50, 75);
 * @type { Vector }
 */
 let grabBitEndPosition = vec(50, 25);
+
+/**
+* @type { Number }
+*/
+let moveBitArrayWaitTime = 60;
+/**
+* @type { Number }
+*/
+let moveBitArraySpeed = 0.5;
+
+/**
+* @type { Number }
+*/
+let grabBitAscendWaitTime = 60;
+/**
+* @type { Number }
+*/
+let grabBitAscendSpeed = 0.5;
+
+/**
+* @type { Number }
+*/
+let grabBitDescendSpeed = 0.5;
 
 
 function update() {
@@ -274,12 +297,12 @@ function update() {
         }
       },
       grabBitAscendEnter: function () {
-        setTimer(60);
+        setTimer(grabBitAscendWaitTime);
         grabBitContainer.activated = false;
-        grabBitContainer.pos = vec(grabBitStartPosition.x, grabBitStartPosition.y)
+        grabBitContainer.pos = vec(grabBitStartPosition.x, grabBitStartPosition.y);
       },
       grabBitAscendExit: function () {
-        grabBitContainer.pos = vec(grabBitEndPosition.x, grabBitEndPosition.y)
+        grabBitContainer.pos = vec(grabBitEndPosition.x, grabBitEndPosition.y);
         grabBitContainer.activated = true;
         grabBitContainer.givenValue = playerBit.activated;
       },
@@ -290,7 +313,7 @@ function update() {
         /**
         * @type { BitContainer }
         */
-        let bitContainer = bitContainerArray[2]
+        let bitContainer = bitContainerArray[2];
         bitContainer.activated = true;
         bitContainer.givenValue = grabBitContainer.givenValue;
 
@@ -300,13 +323,12 @@ function update() {
           health.loseHealth(1);
         }
 
-        setTimer(60);
+        setTimer(moveBitArrayWaitTime);
       }
 		};
 
     initializeBitArray();
-    setTimer(60);
-    console.log(notGateArray);
+    setTimer(moveBitArrayWaitTime);
   }
 
   // If a timer is active, increment it until it reaches its limit
@@ -344,8 +366,8 @@ function update() {
 function moveBitArrayUpdate() {
   // Update the positions of all containers in the array
   for (let i = 0; i < bitContainerArray.length; i++) {
-    bitContainerArray[i].pos.x -= 0.5;
-    notGateArray[i].pos.x -= 0.5;
+    bitContainerArray[i].pos.x -= moveBitArraySpeed;
+    notGateArray[i].pos.x -= moveBitArraySpeed;
   }
 
   // Check if middle container is in the correct spot
@@ -355,7 +377,7 @@ function moveBitArrayUpdate() {
 }
 
 function grabBitAscendUpdate() {
-  grabBitContainer.pos.y -= 0.5;
+  grabBitContainer.pos.y -= grabBitAscendSpeed;
 
   if (grabBitContainer.pos.y <= grabBitEndPosition.y) {
     fsm.changeState(states.GRAB_BIT_DESCEND);
@@ -363,7 +385,7 @@ function grabBitAscendUpdate() {
 }
 
 function grabBitDescendUpdate() {
-  grabBitContainer.pos.y += 0.5;
+  grabBitContainer.pos.y += grabBitDescendSpeed;
 
   if (grabBitContainer.pos.y >= grabBitStartPosition.y) {
     fsm.changeState(states.MOVE_BIT_ARRAY);
@@ -425,6 +447,7 @@ function removeFirstBit() {
  */
 // Returns true or false if the bit should also spawn a not gate
 function getNotGateChance() {
+  return false;
   return Math.random() < 0.5;
 }
 
