@@ -168,7 +168,27 @@ const states = {
 */
 let fsm;
 
+// Difficulty class. Manages game difficulty.
+/**
+*@typedef {{
+  *	 maxDifficulty: Number
+  *  currentDifficulty: Number
+  *  increaseDifficulty: () => void
+  *  initializeDifficulty: () => void
+  * }} DifficultyManager
+  */
+  
+  /**
+  * @type { DifficultyManager }
+  */
+  let difficultyManager;
+
 // Variables pertaining to game state management
+/**
+* @type { Number }
+*/
+let totalBitsSorted = 0;
+
 /**
 * @type { Vector [] }
 */
@@ -206,6 +226,11 @@ let grabBitAscendSpeed = 0.5;
 */
 let grabBitDescendSpeed = 0.5;
 
+/**
+* @type { Number }
+*/
+let notGateChance = 0;
+
 
 function update() {
   if (!ticks) {
@@ -241,6 +266,7 @@ function update() {
       loseHealth: function (healthLost) {
         this.currentHealth -= healthLost;
         if (this.currentHealth <= 0) {
+          difficultyManager.initializeDifficulty();
           end();
         }
       }
@@ -323,9 +349,112 @@ function update() {
           health.loseHealth(1);
         }
 
+        // Increase total bits sorted and increase difficulty upon passing milestones
+        totalBitsSorted++;
+        if (difficultyManager.currentDifficulty == 1 && totalBitsSorted >= 3) {
+          difficultyManager.increaseDifficulty();
+        } 
+        else if (difficultyManager.currentDifficulty == 2 && totalBitsSorted >= 7) {
+          difficultyManager.increaseDifficulty();
+        }
+        else if (difficultyManager.currentDifficulty == 3 && totalBitsSorted >= 13) {
+          difficultyManager.increaseDifficulty();
+        }
+        else if (difficultyManager.currentDifficulty == 4 && totalBitsSorted >= 24) {
+          difficultyManager.increaseDifficulty();
+        }
+        else if (difficultyManager.currentDifficulty == 5 && totalBitsSorted >= 40) {
+          difficultyManager.increaseDifficulty();
+        }
+        else if (difficultyManager.currentDifficulty == 6 && totalBitsSorted >= 60) {
+          difficultyManager.increaseDifficulty();
+        } 
+
         setTimer(moveBitArrayWaitTime);
       }
 		};
+
+    difficultyManager = {
+      maxDifficulty: 7,
+      currentDifficulty: 1,
+      increaseDifficulty: function () {
+        this.currentDifficulty++;
+        if (this.currentDifficulty > this.maxDifficulty) {
+          this.currentDifficulty = this.maxDifficulty;
+        }
+
+        switch (this.currentDifficulty) {
+          case 2:
+            notGateChance = 0.1;
+            moveBitArrayWaitTime = 55;
+            grabBitAscendWaitTime = 55;
+
+            moveBitArraySpeed = 0.6;
+            grabBitAscendSpeed = 0.5;
+            grabBitDescendSpeed = 0.6;
+            break;
+          
+          case 3:
+            notGateChance = 0.2;
+            moveBitArrayWaitTime = 40;
+            grabBitAscendWaitTime = 45;
+  
+            moveBitArraySpeed = 0.8;
+            grabBitAscendSpeed = 0.7;
+            grabBitDescendSpeed = 0.85;
+            break;
+          
+          case 4:
+            notGateChance = 0.3;
+            moveBitArrayWaitTime = 25;
+            grabBitAscendWaitTime = 30;
+    
+            moveBitArraySpeed = 1.2;
+            grabBitAscendSpeed = 1.1;
+            grabBitDescendSpeed = 1.3;
+            break;
+
+          case 5:
+            notGateChance = 0.38;
+            moveBitArrayWaitTime = 10;
+            grabBitAscendWaitTime = 15;
+    
+            moveBitArraySpeed = 1.5;
+            grabBitAscendSpeed = 1.4;
+            grabBitDescendSpeed = 1.8;
+            break;
+          
+          case 6:
+            notGateChance = 0.46;
+            moveBitArrayWaitTime = 2;
+            grabBitAscendWaitTime = 5;
+
+            moveBitArraySpeed = 1.85;
+            grabBitAscendSpeed = 1.7;
+            grabBitDescendSpeed = 2.2;
+            break;
+
+          case 7:
+            notGateChance = 0.5;
+            moveBitArrayWaitTime = 0;
+            grabBitAscendWaitTime = 0;
+  
+            moveBitArraySpeed = 2;
+            grabBitAscendSpeed = 2;
+            grabBitDescendSpeed = 2.5;
+            break;
+        }
+      },
+      initializeDifficulty: function () {
+        notGateChance = 0;
+        moveBitArrayWaitTime = 60;
+        grabBitAscendWaitTime = 60;
+
+        moveBitArraySpeed = 0.5;
+        grabBitAscendSpeed = 0.5;
+        grabBitDescendSpeed = 0.5;
+      }
+    }
 
     initializeBitArray();
     setTimer(moveBitArrayWaitTime);
@@ -447,8 +576,7 @@ function removeFirstBit() {
  */
 // Returns true or false if the bit should also spawn a not gate
 function getNotGateChance() {
-  return false;
-  return Math.random() < 0.5;
+  return Math.random() < notGateChance;
 }
 
 function drawPlayerBit() {
