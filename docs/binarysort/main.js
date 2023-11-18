@@ -1,9 +1,7 @@
 title = "Binary Sort";
 
 description = `
-    Tip:
-Sort the bits.
-Beware the NOT.
+[Hold] Flip bit
 `;
 
 characters = [
@@ -56,7 +54,9 @@ l  l
 ];
 
 options = {
-  seed: 19
+  seed: 19,
+  isPlayingBgm: true,
+  theme: "simple"
 };
 
 // Player Bit class. Stores whether or not the input is currently active or not
@@ -267,6 +267,7 @@ function update() {
         this.currentHealth -= healthLost;
         if (this.currentHealth <= 0) {
           difficultyManager.initializeDifficulty();
+          play("explosion");
           end();
         }
       }
@@ -300,7 +301,7 @@ function update() {
 
         this.currentState = newState;
 
-        switch (this.currentState){
+        switch (this.currentState) {
           case states.MOVE_BIT_ARRAY:
             this.moveBitArrayEnter();
             break;
@@ -333,6 +334,7 @@ function update() {
         grabBitContainer.givenValue = playerBit.activated;
       },
       grabBitDescendEnter: function () {
+        play("select");
       },
 
       grabBitDescendExit: function () {
@@ -345,7 +347,9 @@ function update() {
 
         if (bitContainer.expectedValue == bitContainer.givenValue) {
           addScore(100);
+          play("powerUp");
         } else {
+          play("hit");
           health.loseHealth(1);
         }
 
@@ -446,6 +450,7 @@ function update() {
         }
       },
       initializeDifficulty: function () {
+        totalBitsSorted = 0;
         notGateChance = 0;
         moveBitArrayWaitTime = 60;
         grabBitAscendWaitTime = 60;
@@ -620,6 +625,8 @@ function drawBitArray() {
       else {
         if (bit.expectedValue != bit.givenValue) {
         color("light_red");
+        } else {
+          color("black");
         }
 
         if (bit.givenValue) {
